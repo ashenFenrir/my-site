@@ -115,7 +115,7 @@ function draw() {
 
     
 
-    
+
     const big_hex_style = new HexStyle("#3219c27e", "#a195e594", 3, "20px Rajdhani, sans-serif", "#a195e591");
     const small_hex_style = new HexStyle("#3219c279", "#a195e58c", 2, "11px Rajdhani, sans-serif", "#a195e5");
 
@@ -142,8 +142,8 @@ function draw() {
     const hex_cyber_security = new HexElement(x+1, y-3, "cyber\nsecurity", radius, angle, big_hex_style);    
     hex_cyber_security.draw();
 
-    const hex_editing = new HexElement(x, y-6, "editing", radius, angle, big_hex_style);    
-    hex_editing.draw();
+    // const hex_editing = new HexElement(x, y-6, "editing", radius, angle, big_hex_style);    
+    // hex_editing.draw();
 
 
     const hex_bioinformatics = new HexElement(x-2, y+1, "bioinformatics", rad, angle/6, small_hex_style);    
