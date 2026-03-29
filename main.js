@@ -1,6 +1,6 @@
 
-function init(){
-    const canvas = document.getElementById('canvas');
+function init(canvas_id){
+    const canvas = document.getElementById(canvas_id);
     const ctx = canvas.getContext('2d');
 
     // 1. Get the pixel ratio and the desired display size
@@ -23,9 +23,12 @@ function init(){
 }
 
 function draw() {
-  const canvas = document.getElementById("canvas");
-  const ctx = canvas.getContext("2d");
-  const WIDTH = canvas.width, HEIGHT = canvas.height;
+  const bg_canvas = document.getElementById("bg_canvas");
+  const bg_ctx = bg_canvas.getContext("2d");
+  const main_canvas = document.getElementById("canvas");
+  const main_ctx = main_canvas.getContext("2d");
+
+  const WIDTH = bg_canvas.width, HEIGHT = bg_canvas.height;
 
 
   function get_x(x, y){
@@ -35,7 +38,8 @@ function draw() {
     return rad*y*1.5;
   }
 
-  function draw_hexagon(x, y, radius, angle, fillStyle, strokeStyle, lineWidth){
+  function draw_hexagon(x, y, radius, angle, fillStyle, strokeStyle, lineWidth, ctx=bg_ctx){
+    console.log(ctx);
     ctx.fillStyle = fillStyle;
     ctx.strokeStyle = strokeStyle;
     ctx.lineWidth = lineWidth;
@@ -84,25 +88,20 @@ function draw() {
             this.angle, 
             this.style.shape_fillStyle, 
             this.style.shape_strokeStyle, 
-            this.style.shape_lineWidth);
+            this.style.shape_lineWidth,
+            main_ctx
+        );
 
-        ctx.fillStyle = this.style.font_fillStyle;
-        ctx.font = this.style.font;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(this.text, get_x(this.x, this.y), get_y(this.x, this.y));
+        bg_ctx.fillStyle = this.style.font_fillStyle;
+        bg_ctx.font = this.style.font;
+        bg_ctx.textAlign = 'center';
+        bg_ctx.textBaseline = 'middle';
+        bg_ctx.fillText(this.text, get_x(this.x, this.y), get_y(this.x, this.y));
     }
     }
 
 
     const n = 23;
-    // for (let i = 0; i < n; i++) {
-    //     ctx.beginPath();
-    //     ctx.moveTo(WIDTH/n*i, 0);
-    //     ctx.lineTo(WIDTH/n*i, 20);
-    //     ctx.stroke();
-    // }
-    
 
     const rad = WIDTH/n/Math.cos(Math.PI/3/2)/2;
 
@@ -158,7 +157,11 @@ function draw() {
     const hex_engineering = new HexElement(x+1, y+1, "engineering", rad, angle/6, small_hex_style);    
     hex_engineering.draw();
 
+
+
     
 }
-init();
+init("bg_canvas");
+init("canvas");
 draw();
+
