@@ -61,8 +61,10 @@ function draw() {
         ctx.lineTo(x+radius*Math.cos(Math.PI/3*i+angle), y+radius*Math.sin(Math.PI/3*i+angle));
     }
     let is_inside = ctx.isPointInPath(is_inside_pos.x, is_inside_pos.y);
+
     ctx.stroke();
     ctx.fill();
+
     return is_inside;
     }
 
@@ -90,20 +92,38 @@ function draw() {
         this.y = y;
         this.text = text;
         this.radius = radius;
+        this.t_radius = radius;
         this.angle = angle;
         this.style = style;
         this.hoverStyle = hoverStyle;
+        this.hoverCallback = () => {this.t_radius*=1.1;};
+        this.mouseDownCallback = () => {console.log(this.text, mouseDown);};
     }
+
+    applyShadowSettings(){
+
+    }
+
     draw(){
         let style = this.style;
-        
+        main_ctx.shadowColor = "#000000";
+        main_ctx.shadowOffsetX = 0;
+        main_ctx.shadowOffsetY = 0;
+        main_ctx.shadowBlur = 0;
+
         if(this.is_hovering){
             style = this.hoverStyle;
+        main_ctx.shadowBlur = 10;
         }
+        main_ctx.shadowBlur = 0;
+
+
+       
+
         this.is_hovering = draw_hexagon(
             get_x(this.x, this.y), 
             get_y(this.x, this.y), 
-            this.radius, 
+            this.t_radius, 
             this.angle, 
             style.shape_fillStyle, 
             style.shape_strokeStyle, 
@@ -112,14 +132,23 @@ function draw() {
             {x: mouse_x, y: mouse_y}
         );
 
-        bg_ctx.fillStyle = style.font_fillStyle;
-        bg_ctx.font = style.font;
-        bg_ctx.textAlign = 'center';
-        bg_ctx.textBaseline = 'middle';
-        bg_ctx.fillText(this.text, get_x(this.x, this.y), get_y(this.x, this.y));
 
-        if(this.is_hovering && mouseDown){
-            console.log(this.text, mouseDown);
+        this.t_radius = this.radius;
+
+
+        main_ctx.fillStyle = style.font_fillStyle;
+        main_ctx.font = style.font;
+        main_ctx.textAlign = 'center';
+        main_ctx.textBaseline = 'middle';
+        main_ctx.fillText(this.text, get_x(this.x, this.y), get_y(this.x, this.y));
+
+
+        if(this.is_hovering){
+            if(mouseDown){
+                this.mouseDownCallback();
+            } else{
+                this.hoverCallback();
+            }
         }
 
         return this.is_hovering & mouseDown;
@@ -141,10 +170,10 @@ function draw() {
     
 
 
-    const big_hex_style = new HexStyle("#3219c27e", "#a195e594", 3, "20px Rajdhani, sans-serif", "#a195e591");
-    const big_hex_hover_style = new HexStyle("#5d50aa7e", "#a195e594", 3, "20px Rajdhani, sans-serif", "#a195e591");
-    const small_hex_hover_style = new HexStyle("#5d50aa7e", "#a195e594", 3, "11px Rajdhani, sans-serif", "#a195e591");
-    const small_hex_style = new HexStyle("#3219c279", "#a195e58c", 2, "11px Rajdhani, sans-serif", "#a195e5");
+    const big_hex_style = new HexStyle("rgb(54, 15, 99)", "#a195e5", 3, "20px Rajdhani, sans-serif", "#a195e591");
+    const big_hex_hover_style = new HexStyle("rgb(54, 15, 99)", "#a195e594", 3, "20px Rajdhani, sans-serif", "#a195e591");
+    const small_hex_hover_style = new HexStyle("rgb(54, 15, 99)", "#a195e594", 3, "11px Rajdhani, sans-serif", "#a195e591");
+    const small_hex_style = new HexStyle("rgb(54, 15, 99)", "#a195e58c", 2, "11px Rajdhani, sans-serif", "#a195e5");
 
     const radius = rad*1.5/Math.cos(Math.PI/3/2);
     const angle = Math.PI;
