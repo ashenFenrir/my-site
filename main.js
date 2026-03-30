@@ -3,32 +3,43 @@ function init(canvas_id){
     const canvas = document.getElementById(canvas_id);
     const ctx = canvas.getContext('2d');
 
-    // 1. Get the pixel ratio and the desired display size
     const dpr = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
 
-    // 2. Set the "actual" internal resolution
     canvas.width = rect.width * dpr;
     canvas.height = rect.height * dpr;
 
-    // 3. Set the "visual" display size via CSS
     canvas.style.width = `${rect.width}px`;
     canvas.style.height = `${rect.height}px`;
 
-    // 4. Scale the context to draw in CSS-sized units
     ctx.scale(dpr, dpr);
 
-    // Now drawing at (10, 10) will be sharp on all displays
-    //ctx.fillRect(10, 10, 50, 50);
 }
 
-function draw() {
-  const bg_canvas = document.getElementById("bg_canvas");
-  const bg_ctx = bg_canvas.getContext("2d");
-  const main_canvas = document.getElementById("canvas");
-  const main_ctx = main_canvas.getContext("2d");
 
-  const WIDTH = bg_canvas.width, HEIGHT = bg_canvas.height;
+function draw() {
+    const bg_canvas = document.getElementById("bg_canvas");
+    const bg_ctx = bg_canvas.getContext("2d");
+    const main_canvas = document.getElementById("canvas");
+    const main_ctx = main_canvas.getContext("2d");
+
+    const WIDTH = bg_canvas.width, HEIGHT = bg_canvas.height;
+
+    let mouse_x = 0, mouse_y = 0, mouseDown = 0;
+
+    main_canvas.onmousemove = function(e) {
+        let rect = this.getBoundingClientRect();
+        mouse_x = e.clientX - rect.left;
+        mouse_y = e.clientY - rect.top;
+    };
+
+    document.body.onmousedown = function() { 
+    ++mouseDown;
+    }
+
+    document.body.onmouseup = function() {
+    --mouseDown;
+    }
 
 
   function get_x(x, y){
@@ -38,8 +49,8 @@ function draw() {
     return rad*y*1.5;
   }
 
-  function draw_hexagon(x, y, radius, angle, fillStyle, strokeStyle, lineWidth, ctx=bg_ctx){
-    console.log(ctx);
+  function draw_hexagon(x, y, radius, angle, fillStyle, strokeStyle, lineWidth, ctx, is_inside_pos={x:0, y:0}){
+    // console.log(ctx);
     ctx.fillStyle = fillStyle;
     ctx.strokeStyle = strokeStyle;
     ctx.lineWidth = lineWidth;
@@ -49,8 +60,10 @@ function draw() {
     for(i = 0; i < 8; i++){
         ctx.lineTo(x+radius*Math.cos(Math.PI/3*i+angle), y+radius*Math.sin(Math.PI/3*i+angle));
     }
+    let is_inside = ctx.isPointInPath(is_inside_pos.x, is_inside_pos.y);
     ctx.stroke();
     ctx.fill();
+    return is_inside;
     }
 
     class HexStyle{
@@ -66,37 +79,50 @@ function draw() {
             this.shape_lineWidth = shape_lineWidth;
             this.font = font;
             this.font_fillStyle = font_fillStyle;
-
+            
+            this.is_hovering = false;
         }
     }
 
     class HexElement{
-    constructor(x, y, text, radius, angle, style){
+    constructor(x, y, text, radius, angle, style, hoverStyle){
         this.x = x;
         this.y = y;
         this.text = text;
         this.radius = radius;
         this.angle = angle;
         this.style = style;
-
+        this.hoverStyle = hoverStyle;
     }
     draw(){
-        draw_hexagon(
+        let style = this.style;
+        
+        if(this.is_hovering){
+            style = this.hoverStyle;
+        }
+        this.is_hovering = draw_hexagon(
             get_x(this.x, this.y), 
             get_y(this.x, this.y), 
             this.radius, 
             this.angle, 
-            this.style.shape_fillStyle, 
-            this.style.shape_strokeStyle, 
-            this.style.shape_lineWidth,
-            main_ctx
+            style.shape_fillStyle, 
+            style.shape_strokeStyle, 
+            style.shape_lineWidth,
+            main_ctx,
+            {x: mouse_x, y: mouse_y}
         );
 
-        bg_ctx.fillStyle = this.style.font_fillStyle;
-        bg_ctx.font = this.style.font;
+        bg_ctx.fillStyle = style.font_fillStyle;
+        bg_ctx.font = style.font;
         bg_ctx.textAlign = 'center';
         bg_ctx.textBaseline = 'middle';
         bg_ctx.fillText(this.text, get_x(this.x, this.y), get_y(this.x, this.y));
+
+        if(this.is_hovering && mouseDown){
+            console.log(this.text, mouseDown);
+        }
+
+        return this.is_hovering & mouseDown;
     }
     }
 
@@ -108,7 +134,7 @@ function draw() {
     for(let i = 0; i < n+1; i++){
     for(let j = 0; j < n; j++){
 
-        draw_hexagon(get_x(i, j), get_y(i, j), rad, Math.PI/3/2, "#0a0c1075", "#202633", 1);
+        draw_hexagon(get_x(i, j), get_y(i, j), rad, Math.PI/3/2, "#0a0c1075", "#202633", 1, bg_ctx);
     }
     }
 
@@ -116,6 +142,8 @@ function draw() {
 
 
     const big_hex_style = new HexStyle("#3219c27e", "#a195e594", 3, "20px Rajdhani, sans-serif", "#a195e591");
+    const big_hex_hover_style = new HexStyle("#5d50aa7e", "#a195e594", 3, "20px Rajdhani, sans-serif", "#a195e591");
+    const small_hex_hover_style = new HexStyle("#5d50aa7e", "#a195e594", 3, "11px Rajdhani, sans-serif", "#a195e591");
     const small_hex_style = new HexStyle("#3219c279", "#a195e58c", 2, "11px Rajdhani, sans-serif", "#a195e5");
 
     const radius = rad*1.5/Math.cos(Math.PI/3/2);
@@ -126,40 +154,42 @@ function draw() {
     const x = 12;
     const y = 10;
 
-    const hex_coding = new HexElement(x, y, "coding", radius, angle, big_hex_style);    
-    hex_coding.draw();
-
-    const hex_electronics = new HexElement(x+3, y, "electronics", radius, angle, big_hex_style);    
-    hex_electronics.draw();
-
-    const hex_biology = new HexElement(x-3, y, "biology", radius, angle, big_hex_style);    
-    hex_biology.draw();
-
-    const hex_art = new HexElement(x-2, y-3, "art", radius, angle, big_hex_style);    
-    hex_art.draw();
-
-    const hex_cyber_security = new HexElement(x+1, y-3, "cyber\nsecurity", radius, angle, big_hex_style);    
-    hex_cyber_security.draw();
-
-    // const hex_editing = new HexElement(x, y-6, "editing", radius, angle, big_hex_style);    
-    // hex_editing.draw();
-
-
-    const hex_bioinformatics = new HexElement(x-2, y+1, "bioinformatics", rad, angle/6, small_hex_style);    
-    hex_bioinformatics.draw();
-
-    const hex_animation = new HexElement(x-2, y-5, "animation", rad, angle/6, small_hex_style);    
-    hex_animation.draw();
-
-    const hex_game_dev = new HexElement(x-3, y-2, "GameDev", rad, angle/6, small_hex_style);    
-    hex_game_dev.draw();
-
-    const hex_engineering = new HexElement(x+1, y+1, "engineering", rad, angle/6, small_hex_style);    
-    hex_engineering.draw();
-
-
-
+    const hex_coding = new HexElement(x, y, "coding", radius, angle, big_hex_style, big_hex_hover_style);    
     
+    const hex_electronics = new HexElement(x+3, y, "electronics", radius, angle, big_hex_style, big_hex_hover_style);    
+    
+    const hex_biology = new HexElement(x-3, y, "biology", radius, angle, big_hex_style, big_hex_hover_style);    
+    
+    const hex_art = new HexElement(x-2, y-3, "art", radius, angle, big_hex_style, big_hex_hover_style);    
+    
+    const hex_cyber_security = new HexElement(x+1, y-3, "cyber\nsecurity", radius, angle, big_hex_style, big_hex_hover_style);    
+    
+    // const hex_editing = new HexElement(x, y-6, "editing", radius, angle, big_hex_style, big_hex_hover_style);    
+    // hex_editing.draw();
+    
+    
+    const hex_bioinformatics = new HexElement(x-2, y+1, "bioinformatics", rad, angle/6, small_hex_style, small_hex_hover_style);    
+    
+    const hex_animation = new HexElement(x-2, y-5, "animation", rad, angle/6, small_hex_style, small_hex_hover_style);    
+    
+    const hex_game_dev = new HexElement(x-3, y-2, "GameDev", rad, angle/6, small_hex_style, small_hex_hover_style);    
+    
+    const hex_engineering = new HexElement(x+1, y+1, "engineering", rad, angle/6, small_hex_style, small_hex_hover_style);    
+    
+    function draw_hex(){
+        main_ctx.clearRect(0, 0, WIDTH, HEIGHT);
+        hex_engineering.draw();
+        hex_game_dev.draw();
+        hex_animation.draw();
+        hex_bioinformatics.draw();
+        hex_cyber_security.draw();
+        hex_art.draw();
+        hex_biology.draw();
+        hex_electronics.draw();
+        hex_coding.draw();
+        window.requestAnimationFrame(draw_hex);
+    }
+    draw_hex();
 }
 init("bg_canvas");
 init("canvas");
