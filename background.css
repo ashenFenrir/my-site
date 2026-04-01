@@ -2,7 +2,7 @@ body {
     background: linear-gradient(135deg, #0f00dd, #650000, #5900ec);
     background-size: 600% 600%;
 
-    animation: AnimationName 13s ease infinite;
+    animation: AnimationName 10s ease infinite;
 }
 
 @keyframes AnimationName {

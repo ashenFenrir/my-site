@@ -16,6 +16,11 @@ function init(canvas_id){
 
 }
 
+function lerp(a, b, f)
+{
+    return a * (1.0 - f) + (b * f);
+}
+
 
 function draw() {
     const bg_canvas = document.getElementById("bg_canvas");
@@ -205,8 +210,97 @@ function draw() {
     
     const hex_engineering = new HexElement(x+1, y+1, "engineering", rad, angle/6, small_hex_style, small_hex_hover_style);    
     
+    let dots = []
+    for(let i = 0; i < 1000; i++){
+        dots.push(
+            {
+                x: Math.floor(Math.random()*WIDTH),
+                y: Math.floor(Math.random()*HEIGHT),
+                xs: Math.random()*0.1-0.05,
+                ys: Math.random()*0.1-0.05,
+                dx: Math.floor(Math.random()*WIDTH),
+                dy: Math.floor(Math.random()*HEIGHT),
+            }
+        );
+
+    }
+    function draw_dots(){
+        const push_rad = 200;
+        console.log(dots);
+        main_ctx.beginPath();
+        main_ctx.arc(mouse_x, mouse_y, push_rad, 0, 2 * Math.PI);
+        main_ctx.stroke();
+
+        connected_dots = [];
+
+        let i = 0;
+        dots.forEach(e => {
+            
+            
+            e.x += e.xs;
+            e.y += e.ys;
+            
+            
+            if(e.x > WIDTH){
+                
+                e.x=e.x%WIDTH;
+            }if(e.x < 0){
+
+                e.x=WIDTH;
+            }if(e.y > HEIGHT){
+                
+                e.y=e.y%HEIGHT;
+            }if(e.y < 0){
+
+                e.y=HEIGHT;
+            }
+            
+            let d = (e.x-mouse_x)**2+(e.y-mouse_y)**2;
+            
+            e.xs=lerp(e.xs, e.xs/((e.xs**2+e.ys**2)**0.5)/5+(e.dx-e.x)/100000, 0.05);
+            e.ys=lerp(e.ys, e.ys/((e.xs**2+e.ys**2)**0.5)/5+(e.dy-e.y)/100000, 0.05);
+
+            if(d < push_rad**2){
+                let f = -5/d;
+                if(f>1) f = 1;
+                e.xs+=f*(mouse_x-e.x);
+                e.ys+=f*(mouse_y-e.y);
+            }
+            if(d < (push_rad*1.5)**2){
+
+                main_ctx.fillStyle = "#24da0034";
+                connected_dots.push(i);
+            }
+            else{
+
+                main_ctx.fillStyle = "#24da002d";
+            }
+            main_ctx.beginPath();
+            main_ctx.arc(e.x, e.y, 3, 0, 2 * Math.PI);
+            main_ctx.fill();
+            i++;
+        });
+
+        connected_dots.forEach(i => {
+            connected_dots.forEach(j => {
+                if((dots[i].x-dots[j].x)**2+(dots[i].y-dots[j].y)**2 < 60**2){
+                    
+                    main_ctx.lineWidth = 1;
+                    main_ctx.strokeStyle = "#17520069";
+                    main_ctx.beginPath();
+                    main_ctx.moveTo(dots[i].x, dots[i].y);
+                    main_ctx.lineTo(dots[j].x, dots[j].y);
+                    main_ctx.stroke();
+                }
+            });
+        });
+    }
+
     function draw_hex(){
         main_ctx.clearRect(0, 0, WIDTH, HEIGHT);
+
+        draw_dots();
+
         hex_engineering.draw();
         hex_game_dev.draw();
         hex_animation.draw();
@@ -218,6 +312,9 @@ function draw() {
         hex_coding.draw();
         window.requestAnimationFrame(draw_hex);
     }
+
+
+
     draw_hex();
 }
 init("bg_canvas");
