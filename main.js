@@ -230,6 +230,7 @@ function draw() {
     function draw_dots(){
         const push_rad = WIDTH/10;
         
+        main_ctx.strokeStyle = "#6464641a";
         main_ctx.beginPath();
         main_ctx.arc(mouse_x, mouse_y, push_rad, 0, 2 * Math.PI);
         main_ctx.stroke();
