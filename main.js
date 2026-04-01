@@ -29,14 +29,16 @@ function draw() {
     const main_ctx = main_canvas.getContext("2d");
 
     const WIDTH = bg_canvas.width, HEIGHT = bg_canvas.height;
+    
+    main_ctx.clearRect(0, 0, WIDTH, HEIGHT);
+    bg_ctx.clearRect(0, 0, WIDTH, HEIGHT);
 
     let mouse_x = 0, mouse_y = 0, mouseDown = 0;
 
-    main_canvas.onmousemove = function(e) {
-        let rect = this.getBoundingClientRect();
-        mouse_x = e.clientX - rect.left;
-        mouse_y = e.clientY - rect.top;
-    };
+    document.addEventListener('mousemove', e => {
+        mouse_x = e.clientX;
+        mouse_y = e.clientY;
+    });
 
     document.body.onmousedown = function() { 
     ++mouseDown;
@@ -101,7 +103,7 @@ function draw() {
         this.angle = angle;
         this.style = style;
         this.hoverStyle = hoverStyle;
-        this.hoverCallback = () => {this.t_radius*=1.1;};
+        this.hoverCallback = () => {this.t_radius=lerp(this.t_radius, this.radius*1.1, 0.1);};
         this.mouseDownCallback = () => {console.log(this.text, mouseDown);};
     }
 
@@ -138,7 +140,7 @@ function draw() {
         );
 
 
-        this.t_radius = this.radius;
+        this.t_radius=lerp(this.t_radius, this.radius, 0.1);
 
 
         main_ctx.fillStyle = style.font_fillStyle;
@@ -161,12 +163,13 @@ function draw() {
     }
 
 
-    const n = 23;
+    const n = Math.floor(WIDTH/100);
+    console.log(n);
 
     const rad = WIDTH/n/Math.cos(Math.PI/3/2)/2;
 
     for(let i = 0; i < n+1; i++){
-    for(let j = 0; j < n; j++){
+    for(let j = 0; j < n*2; j++){
 
         draw_hexagon(get_x(i, j), get_y(i, j), rad, Math.PI/3/2, "#0a0c1075", "#202633", 1, bg_ctx);
     }
@@ -175,18 +178,18 @@ function draw() {
     
 
 
-    const big_hex_style = new HexStyle("rgb(54, 15, 99)", "#a195e5", 3, "20px Rajdhani, sans-serif", "#a195e591");
-    const big_hex_hover_style = new HexStyle("rgb(54, 15, 99)", "#a195e594", 3, "20px Rajdhani, sans-serif", "#a195e591");
-    const small_hex_hover_style = new HexStyle("rgb(54, 15, 99)", "#a195e594", 3, "11px Rajdhani, sans-serif", "#a195e591");
-    const small_hex_style = new HexStyle("rgb(54, 15, 99)", "#a195e58c", 2, "11px Rajdhani, sans-serif", "#a195e5");
+    const big_hex_style = new HexStyle("#0000004a", "#a195e5", 3, `${20/1980*WIDTH}px Rajdhani, sans-serif`, "#a195e591");
+    const small_hex_style = new HexStyle("#0000004a", "#a195e58c", 2, `${11/1980*WIDTH}px Rajdhani, sans-serif`, "#a195e5");
+    const big_hex_hover_style = new HexStyle("#00000096", "#a195e5", 3, `${20/1980*WIDTH}px Rajdhani, sans-serif`, "#a195e591");
+    const small_hex_hover_style = new HexStyle("#00000096", "#a195e5", 3, `${11/1980*WIDTH}px Rajdhani, sans-serif`, "#a195e591");
 
     const radius = rad*1.5/Math.cos(Math.PI/3/2);
     const angle = Math.PI;
     // const radius = rad*2;
     // const angle = Math.PI/6;
 
-    const x = 12;
-    const y = 10;
+    const x = Math.floor(n/2)+1;
+    const y = 8;
 
     const hex_coding = new HexElement(x, y, "coding", radius, angle, big_hex_style, big_hex_hover_style);    
     
@@ -211,7 +214,7 @@ function draw() {
     const hex_engineering = new HexElement(x+1, y+1, "engineering", rad, angle/6, small_hex_style, small_hex_hover_style);    
     
     let dots = []
-    for(let i = 0; i < 1000; i++){
+    for(let i = 0; i < WIDTH/5; i++){
         dots.push(
             {
                 x: Math.floor(Math.random()*WIDTH),
@@ -225,8 +228,8 @@ function draw() {
 
     }
     function draw_dots(){
-        const push_rad = 200;
-        console.log(dots);
+        const push_rad = WIDTH/10;
+        
         main_ctx.beginPath();
         main_ctx.arc(mouse_x, mouse_y, push_rad, 0, 2 * Math.PI);
         main_ctx.stroke();
@@ -268,12 +271,12 @@ function draw() {
             }
             if(d < (push_rad*1.5)**2){
 
-                main_ctx.fillStyle = "#24da0034";
+                main_ctx.fillStyle = "#24da002c";
                 connected_dots.push(i);
             }
             else{
 
-                main_ctx.fillStyle = "#24da002d";
+                main_ctx.fillStyle = "#24da0015";
             }
             main_ctx.beginPath();
             main_ctx.arc(e.x, e.y, 3, 0, 2 * Math.PI);
@@ -313,10 +316,18 @@ function draw() {
         window.requestAnimationFrame(draw_hex);
     }
 
-
-
     draw_hex();
 }
+document.addEventListener('onresize', (event) => {
+
+
+});
+
+window.addEventListener('resize', function(event) {
+    console.log("resize");
+    window.location.reload();
+}, true);
+
 init("bg_canvas");
 init("canvas");
 draw();
